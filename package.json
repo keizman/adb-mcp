@@ -11,7 +11,11 @@
     "dev": "tsc -w",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["mcp", "android", "adb"],
+  "keywords": [
+    "mcp",
+    "android",
+    "adb"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {

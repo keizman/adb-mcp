@@ -238,6 +238,10 @@ class AndroidAdbServer {
                 type: 'string',
                 description: 'Specific device ID to target',
               },
+              filter: {
+                type: 'string',
+                description: 'Optional case-insensitive filter to search for specific packages',
+              },
             },
             required: [],
           },
@@ -464,13 +468,19 @@ class AndroidAdbServer {
     }
 
     const deviceId = args?.device_id ? await validateDeviceId(args.device_id) : undefined;
+    const filter = args?.filter ? String(args.filter).toLowerCase() : undefined;
     const output = await executeAdbCommand('shell pm list packages', deviceId);
     
     // Parse the output to extract package names
-    const packages = output
+    let packages = output
       .split('\n')
       .map(line => line.trim().replace('package:', ''))
       .filter(Boolean);
+    
+    // Apply case-insensitive filter if provided
+    if (filter) {
+      packages = packages.filter(pkg => pkg.toLowerCase().includes(filter));
+    }
     
     return {
       content: [
