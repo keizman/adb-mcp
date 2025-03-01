@@ -25,9 +25,33 @@ A powerful Model Context Protocol (MCP) server that enables AI assistants to int
 
 ## 🔧 Installation
 
+### Option 1: Install from npm (Recommended)
+
+```bash
+# Install globally
+npm install -g @landicefu/android-adb-mcp-server
+
+# Or install locally in your project
+npm install @landicefu/android-adb-mcp-server
+```
+
+### Option 2: Run directly with npx (No compilation needed)
+
+You can use npx to run the package without installing it globally:
+
+```bash
+# Run directly with npx
+npx @landicefu/android-adb-mcp-server
+
+# Or if you've installed it locally
+npx @landicefu/android-adb-mcp-server
+```
+
+### Option 3: Manual Installation from Source
+
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/android-adb-mcp-server.git
+   git clone https://github.com/landicefu/android-adb-mcp-server.git
    cd android-adb-mcp-server
    ```
 
@@ -45,7 +69,11 @@ A powerful Model Context Protocol (MCP) server that enables AI assistants to int
 
 Add the server to your MCP configuration file:
 
-### For Claude Desktop
+### For npm Global Installation
+
+If you installed the package globally with npm, you can use the executable name directly:
+
+#### For Claude Desktop
 
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or equivalent on other platforms:
 
@@ -53,8 +81,8 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 {
   "mcpServers": {
     "android-adb": {
-      "command": "node",
-      "args": ["/absolute/path/to/android-adb-mcp-server/build/index.js"],
+      "command": "@landicefu/android-adb-mcp-server",
+      "args": [],
       "env": {},
       "disabled": false,
       "alwaysAllow": []
@@ -63,7 +91,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 }
 ```
 
-### For Cline (VSCode Extension)
+#### For Cline (VSCode Extension)
 
 Edit `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json` (macOS) or equivalent on other platforms:
 
@@ -71,8 +99,8 @@ Edit `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo
 {
   "mcpServers": {
     "android-adb": {
-      "command": "node",
-      "args": ["/absolute/path/to/android-adb-mcp-server/build/index.js"],
+      "command": "@landicefu/android-adb-mcp-server",
+      "args": [],
       "env": {},
       "disabled": false,
       "alwaysAllow": []
@@ -81,7 +109,99 @@ Edit `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo
 }
 ```
 
-4. Restart your AI assistant to load the new server configuration
+### For Local Installation or Manual Build
+
+If you installed the package locally or built it from source:
+
+#### For Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "android-adb": {
+      "command": "node",
+      "args": ["/absolute/path/to/@landicefu/android-adb-mcp-server/build/index.js"],
+      "env": {},
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}
+```
+
+#### For Cline (VSCode Extension)
+
+```json
+{
+  "mcpServers": {
+    "android-adb": {
+      "command": "node",
+      "args": ["/absolute/path/to/@landicefu/android-adb-mcp-server/build/index.js"],
+      "env": {},
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}
+```
+
+### For npx Direct Execution
+
+#### Using npx with npm package (Recommended)
+
+If you want to run the npm package directly with npx:
+
+##### For Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "android-adb": {
+      "command": "npx",
+      "args": ["-y", "@landicefu/android-adb-mcp-server"],
+      "env": {},
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}
+```
+
+##### For Cline (VSCode Extension)
+
+```json
+{
+  "mcpServers": {
+    "android-adb": {
+      "command": "npx",
+      "args": ["-y", "@landicefu/android-adb-mcp-server"],
+      "env": {},
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}
+```
+
+#### Using node directly with source files
+
+If you prefer to run with node directly on the source files:
+
+```json
+{
+  "mcpServers": {
+    "android-adb": {
+      "command": "node",
+      "args": ["/path/to/@landicefu/android-adb-mcp-server/src/index.js"],
+      "env": {},
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}
+```
+
+After configuring, restart your AI assistant to load the new server configuration.
 
 ## 📱 Device Management
 
@@ -323,6 +443,43 @@ If you encounter issues, you can run the server manually to see error messages:
 ```bash
 npm start
 ```
+
+## 📦 Publishing to npm
+
+If you want to publish your own version of this package to npm, follow these steps:
+
+1. Make sure you have an npm account. If not, create one at [npmjs.com](https://www.npmjs.com/signup)
+
+2. Log in to npm from the command line:
+   ```bash
+   npm login
+   ```
+
+3. Update the package.json with your information:
+   - The package name is set to `@landicefu/android-adb-mcp-server`
+   - Update the `version` following semantic versioning
+   - The author field is set to "Landice Fu <landice.fu@gmail.com>"
+   - The repository, bugs, and homepage URLs are set to your GitHub repository
+
+4. Prepare the package for publishing:
+   ```bash
+   npm run build
+   ```
+
+5. Publish the package:
+   ```bash
+   npm publish
+   ```
+
+   Since you're publishing a scoped package (@landicefu/android-adb-mcp-server):
+   ```bash
+   npm publish --access public
+   ```
+
+6. To update the package later, increment the version number in package.json and run:
+   ```bash
+   npm publish
+   ```
 
 ## 🤝 Contributing
 

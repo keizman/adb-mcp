@@ -1,28 +1,52 @@
 {
-  "name": "android-adb-mcp-server",
+  "name": "@landicefu/android-adb-mcp-server",
   "version": "1.0.0",
   "description": "This MCP server provides tools for interacting with Android devices through the Android Debug Bridge (ADB). It enables AI assistants to perform common Android development and testing operations.",
   "main": "build/index.js",
   "type": "module",
+  "bin": {
+    "android-adb-mcp-server": "./build/index.js"
+  },
+  "files": [
+    "build/",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "start": "node build/index.js",
     "dev": "tsc -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "mcp",
     "android",
-    "adb"
+    "adb",
+    "model-context-protocol",
+    "ai-tools",
+    "android-debug-bridge"
   ],
-  "author": "",
+  "author": "Landice Fu <landice.fu@gmail.com>",
   "license": "ISC",
-  "devDependencies": {
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/landicefu/android-adb-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/landicefu/android-adb-mcp-server/issues"
+  },
+  "homepage": "https://github.com/landicefu/android-adb-mcp-server#readme",
+  "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
     "@types/node": "^22.13.7",
     "typescript": "^5.8.2"
   },
-  "dependencies": {
-    "sharp": "^0.33.5"
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
