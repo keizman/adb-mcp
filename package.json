@@ -22,5 +22,8 @@
     "@modelcontextprotocol/sdk": "^1.6.1",
     "@types/node": "^22.13.7",
     "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
   }
 }

@@ -12,6 +12,7 @@ import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import sharp from 'sharp';
 
 const execAsync = promisify(exec);
 
@@ -97,25 +98,81 @@ async function validateDeviceId(deviceId?: string): Promise<string> {
   return devices[0].id;
 }
 
+// Get file extension for image format
+function getFileExtension(format: string = 'png'): string {
+  const normalizedFormat = format.toLowerCase();
+  return `.${normalizedFormat}`;
+}
+
 // Create a temporary file path
-function createTempFilePath(extension: string): string {
+function createTempFilePath(format: string = 'png'): string {
+  const extension = getFileExtension(format);
   return path.join(os.tmpdir(), `adb-screenshot-${Date.now()}${extension}`);
 }
 
+// Get MIME type for image format
+function getMimeType(format: string = 'png'): string {
+  const normalizedFormat = format.toLowerCase();
+  return `image/${normalizedFormat}`;
+}
+
+// Convert image to specified format using sharp
+async function convertImageFormat(
+  inputPath: string,
+  outputPath: string,
+  format: string = 'png'
+): Promise<void> {
+  try {
+    // Normalize format
+    const normalizedFormat = format.toLowerCase();
+    
+    // Create output directory if it doesn't exist
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    
+    // Use sharp to convert the image
+    await sharp(inputPath)
+      .toFormat(normalizedFormat === 'jpg' ? 'jpeg' : normalizedFormat as any)
+      .toFile(outputPath);
+      
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to convert image format: ${error.message}`
+      );
+    }
+    throw error;
+  }
+}
+
 // Copy image to clipboard based on platform
-async function copyImageToClipboard(imagePath: string): Promise<void> {
+async function copyImageToClipboard(imagePath: string, format: string = 'png'): Promise<void> {
   const platform = os.platform();
+  const normalizedFormat = format.toLowerCase();
   
   try {
     if (platform === 'darwin') {
-      // macOS
-      await execAsync(`osascript -e 'set the clipboard to (read (POSIX file "${imagePath}") as JPEG picture)'`);
+      // macOS - Note: osascript supports 'JPEG', 'TIFF', 'GIF', 'PNG' picture formats
+      // For WEBP and other formats, we'll default to PNG for clipboard
+      let osxFormat = 'PNG';
+      if (['jpeg', 'jpg'].includes(normalizedFormat)) {
+        osxFormat = 'JPEG';
+      } else if (normalizedFormat === 'tiff') {
+        osxFormat = 'TIFF';
+      } else if (normalizedFormat === 'gif') {
+        osxFormat = 'GIF';
+      }
+      await execAsync(`osascript -e 'set the clipboard to (read (POSIX file "${imagePath}") as ${osxFormat} picture)'`);
     } else if (platform === 'win32') {
-      // Windows
+      // Windows - powershell handles various formats through System.Drawing.Image
       await execAsync(`powershell -command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::SetImage([System.Drawing.Image]::FromFile('${imagePath}'))"`);
     } else if (platform === 'linux') {
-      // Linux
-      await execAsync(`xclip -selection clipboard -t image/png -i "${imagePath}"`);
+      // Linux - xclip with appropriate MIME type
+      const mimeType = getMimeType(normalizedFormat);
+      await execAsync(`xclip -selection clipboard -t ${mimeType} -i "${imagePath}"`);
     } else {
       throw new Error(`Unsupported platform: ${platform}`);
     }
@@ -322,6 +379,11 @@ class AndroidAdbServer {
                 type: 'string',
                 description: 'Specific device ID to target',
               },
+              format: {
+                type: 'string',
+                description: 'Image format (png, jpg, webp, etc.). Default is png',
+                enum: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'],
+              },
             },
             required: ['output_path'],
           },
@@ -335,6 +397,11 @@ class AndroidAdbServer {
               device_id: {
                 type: 'string',
                 description: 'Specific device ID to target',
+              },
+              format: {
+                type: 'string',
+                description: 'Image format (png, jpg, webp, etc.). Default is png',
+                enum: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'],
               },
             },
             required: [],
@@ -623,15 +690,16 @@ class AndroidAdbServer {
     }
 
     const deviceId = args.device_id ? await validateDeviceId(args.device_id) : undefined;
-    const tempDevicePath = '/sdcard/screenshot.png';
-    const tempLocalPath = createTempFilePath('.png');
+    const format = typeof args.format === 'string' ? args.format.toLowerCase() : 'png';
+    const tempDevicePath = '/sdcard/screenshot.png'; // Android always captures as PNG
+    const tempLocalPngPath = path.join(os.tmpdir(), `adb-screenshot-${Date.now()}.png`);
     
     try {
       // Take screenshot on device
       await executeAdbCommand(`shell screencap -p ${tempDevicePath}`, deviceId);
       
-      // Pull screenshot to local temp file
-      await executeAdbCommand(`pull ${tempDevicePath} ${tempLocalPath}`, deviceId);
+      // Pull screenshot to local temp file (as PNG)
+      await executeAdbCommand(`pull ${tempDevicePath} ${tempLocalPngPath}`, deviceId);
       
       // Clean up device temp file
       await executeAdbCommand(`shell rm ${tempDevicePath}`, deviceId);
@@ -642,14 +710,14 @@ class AndroidAdbServer {
         fs.mkdirSync(outputDir, { recursive: true });
       }
       
-      // Move temp file to output path
-      fs.copyFileSync(tempLocalPath, args.output_path);
+      // Convert image to desired format and save to output path
+      await convertImageFormat(tempLocalPngPath, args.output_path, format);
       
       return {
         content: [
           {
             type: 'text',
-            text: `Screenshot saved to: ${args.output_path}`,
+            text: `Screenshot saved to: ${args.output_path} in ${format} format`,
           },
         ],
       };
@@ -663,8 +731,8 @@ class AndroidAdbServer {
       throw error;
     } finally {
       // Clean up local temp file
-      if (fs.existsSync(tempLocalPath)) {
-        fs.unlinkSync(tempLocalPath);
+      if (fs.existsSync(tempLocalPngPath)) {
+        fs.unlinkSync(tempLocalPngPath);
       }
     }
   }
@@ -678,27 +746,32 @@ class AndroidAdbServer {
     }
 
     const deviceId = args?.device_id ? await validateDeviceId(args.device_id) : undefined;
-    const tempDevicePath = '/sdcard/screenshot.png';
-    const tempLocalPath = createTempFilePath('.png');
+    const format = args?.format && typeof args.format === 'string' ? args.format.toLowerCase() : 'png';
+    const tempDevicePath = '/sdcard/screenshot.png'; // Android always captures as PNG
+    const tempLocalPngPath = path.join(os.tmpdir(), `adb-screenshot-${Date.now()}.png`);
+    const tempLocalConvertedPath = createTempFilePath(format);
     
     try {
       // Take screenshot on device
       await executeAdbCommand(`shell screencap -p ${tempDevicePath}`, deviceId);
       
-      // Pull screenshot to local temp file
-      await executeAdbCommand(`pull ${tempDevicePath} ${tempLocalPath}`, deviceId);
+      // Pull screenshot to local temp file (as PNG)
+      await executeAdbCommand(`pull ${tempDevicePath} ${tempLocalPngPath}`, deviceId);
       
       // Clean up device temp file
       await executeAdbCommand(`shell rm ${tempDevicePath}`, deviceId);
       
-      // Copy to clipboard
-      await copyImageToClipboard(tempLocalPath);
+      // Convert image to desired format
+      await convertImageFormat(tempLocalPngPath, tempLocalConvertedPath, format);
+      
+      // Copy to clipboard with specified format
+      await copyImageToClipboard(tempLocalConvertedPath, format);
       
       return {
         content: [
           {
             type: 'text',
-            text: 'Screenshot copied to clipboard',
+            text: `Screenshot copied to clipboard in ${format} format`,
           },
         ],
       };
@@ -711,9 +784,12 @@ class AndroidAdbServer {
       }
       throw error;
     } finally {
-      // Clean up local temp file
-      if (fs.existsSync(tempLocalPath)) {
-        fs.unlinkSync(tempLocalPath);
+      // Clean up local temp files
+      if (fs.existsSync(tempLocalPngPath)) {
+        fs.unlinkSync(tempLocalPngPath);
+      }
+      if (fs.existsSync(tempLocalConvertedPath)) {
+        fs.unlinkSync(tempLocalConvertedPath);
       }
     }
   }
