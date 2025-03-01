@@ -39,6 +39,7 @@
   },
   "homepage": "https://github.com/landicefu/android-adb-mcp-server#readme",
   "dependencies": {
+    "@landicefu/android-adb-mcp-server": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.6.1",
     "sharp": "^0.33.5"
   },

@@ -69,89 +69,9 @@ npx @landicefu/android-adb-mcp-server
 
 Add the server to your MCP configuration file:
 
-### For npm Global Installation
+### For Cline, Roo Code and Claude Desktop
 
-If you installed the package globally with npm, you can use the executable name directly:
-
-#### For Claude Desktop
-
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or equivalent on other platforms:
-
-```json
-{
-  "mcpServers": {
-    "android-adb": {
-      "command": "@landicefu/android-adb-mcp-server",
-      "args": [],
-      "env": {},
-      "disabled": false,
-      "alwaysAllow": []
-    }
-  }
-}
-```
-
-#### For Cline (VSCode Extension)
-
-Edit `~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json` (macOS) or equivalent on other platforms:
-
-```json
-{
-  "mcpServers": {
-    "android-adb": {
-      "command": "@landicefu/android-adb-mcp-server",
-      "args": [],
-      "env": {},
-      "disabled": false,
-      "alwaysAllow": []
-    }
-  }
-}
-```
-
-### For Local Installation or Manual Build
-
-If you installed the package locally or built it from source:
-
-#### For Claude Desktop
-
-```json
-{
-  "mcpServers": {
-    "android-adb": {
-      "command": "node",
-      "args": ["/absolute/path/to/@landicefu/android-adb-mcp-server/build/index.js"],
-      "env": {},
-      "disabled": false,
-      "alwaysAllow": []
-    }
-  }
-}
-```
-
-#### For Cline (VSCode Extension)
-
-```json
-{
-  "mcpServers": {
-    "android-adb": {
-      "command": "node",
-      "args": ["/absolute/path/to/@landicefu/android-adb-mcp-server/build/index.js"],
-      "env": {},
-      "disabled": false,
-      "alwaysAllow": []
-    }
-  }
-}
-```
-
-### For npx Direct Execution
-
-#### Using npx with npm package (Recommended)
-
-If you want to run the npm package directly with npx:
-
-##### For Claude Desktop
+Edit the corresponding configuration file, for example, `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or equivalent on other platforms:
 
 ```json
 {
@@ -167,23 +87,7 @@ If you want to run the npm package directly with npx:
 }
 ```
 
-##### For Cline (VSCode Extension)
-
-```json
-{
-  "mcpServers": {
-    "android-adb": {
-      "command": "npx",
-      "args": ["-y", "@landicefu/android-adb-mcp-server"],
-      "env": {},
-      "disabled": false,
-      "alwaysAllow": []
-    }
-  }
-}
-```
-
-#### Using node directly with source files
+### Using node directly with source files
 
 If you prefer to run with node directly on the source files:
 
