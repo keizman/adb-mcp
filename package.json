@@ -1,0 +1,22 @@
+{
+  "name": "android-adb-mcp-server",
+  "version": "1.0.0",
+  "description": "This MCP server provides tools for interacting with Android devices through the Android Debug Bridge (ADB). It enables AI assistants to perform common Android development and testing operations.",
+  "main": "build/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "postbuild": "chmod +x build/index.js",
+    "start": "node build/index.js",
+    "dev": "tsc -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["mcp", "android", "adb"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "@types/node": "^22.13.7",
+    "typescript": "^5.8.2"
+  }
+}
