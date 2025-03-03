@@ -39,7 +39,7 @@ After configuring, restart your AI assistant to load the new server configuratio
   - **Linux**: `xclip` (install via `apt-get install xclip` or equivalent)
 - Node.js 16.x or higher
 
-## �� Features
+## 🚀 Features
 
 - Connect to and manage multiple Android devices
 - Execute shell commands on Android devices
