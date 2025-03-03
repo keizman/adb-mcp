@@ -747,6 +747,8 @@ class AndroidAdbServer {
   }
 
   private async handleTakeScreenshotAndSave(args: any) {
+    console.error(`handleTakeScreenshotAndSave called with args: ${JSON.stringify(args)}`);
+    
     if (typeof args !== 'object' || args === null || typeof args.output_path !== 'string') {
       throw new McpError(
         ErrorCode.InvalidParams,
@@ -754,18 +756,20 @@ class AndroidAdbServer {
       );
     }
 
-    const deviceId = args.device_id ? await validateDeviceId(args.device_id) : undefined;
-    const format = typeof args.format === 'string' ? args.format.toLowerCase() : 'png';
-    const tempDevicePath = '/sdcard/screenshot.png'; // Android always captures as PNG
-    const tempLocalPngPath = path.join(os.tmpdir(), `adb-screenshot-${Date.now()}.png`);
+    // Validate device ID if provided
+    if (args.device_id) {
+      await validateDeviceId(args.device_id);
+    }
     
     // Resolve the output path to ensure it's absolute and in a writable location
     const resolvedOutputPath = resolvePath(args.output_path);
+    console.error(`Resolved output path: ${resolvedOutputPath}`);
     
     // Ensure the output directory exists
     const outputDir = path.dirname(resolvedOutputPath);
     if (!fs.existsSync(outputDir)) {
       try {
+        console.error(`Creating directory: ${outputDir}`);
         fs.mkdirSync(outputDir, { recursive: true });
       } catch (error) {
         if (error instanceof Error) {
@@ -779,7 +783,10 @@ class AndroidAdbServer {
     }
     
     // Check if the directory is writable
-    if (!(await isDirectoryWritable(outputDir))) {
+    const isWritable = await isDirectoryWritable(outputDir);
+    console.error(`Directory ${outputDir} is writable: ${isWritable}`);
+    
+    if (!isWritable) {
       throw new McpError(
         ErrorCode.InternalError,
         `Directory is not writable: ${outputDir}. Try using an absolute path or a path in your home directory.`
@@ -787,17 +794,28 @@ class AndroidAdbServer {
     }
     
     try {
-      // Take screenshot on device
-      await executeAdbCommand(`shell screencap -p ${tempDevicePath}`, deviceId);
+      // Use the direct ADB command that we know works
+      console.error(`Taking screenshot using direct ADB command...`);
+      const deviceFlag = args.device_id ? `-s ${args.device_id} ` : '';
+      const command = `adb ${deviceFlag}exec-out screencap -p > "${resolvedOutputPath}"`;
       
-      // Pull screenshot to local temp file (as PNG)
-      await executeAdbCommand(`pull ${tempDevicePath} ${tempLocalPngPath}`, deviceId);
+      console.error(`Executing command: ${command}`);
+      await execAsync(command);
+      console.error(`Screenshot saved successfully`);
       
-      // Clean up device temp file
-      await executeAdbCommand(`shell rm ${tempDevicePath}`, deviceId);
-      
-      // Convert image to desired format and save to output path
-      await convertImageFormat(tempLocalPngPath, resolvedOutputPath, format);
+      // Convert to the desired format if not PNG
+      const format = typeof args.format === 'string' ? args.format.toLowerCase() : 'png';
+      if (format !== 'png') {
+        console.error(`Converting image to ${format} format...`);
+        const tempPngPath = resolvedOutputPath;
+        const formatOutputPath = resolvedOutputPath.replace(/\.png$/i, getFileExtension(format));
+        
+        await convertImageFormat(tempPngPath, formatOutputPath, format);
+        console.error(`Image converted to ${format} format`);
+        
+        // Remove the original PNG file
+        fs.unlinkSync(tempPngPath);
+      }
       
       return {
         content: [
@@ -808,6 +826,7 @@ class AndroidAdbServer {
         ],
       };
     } catch (error) {
+      console.error(`Error taking screenshot: ${error}`);
       if (error instanceof Error) {
         throw new McpError(
           ErrorCode.InternalError,
@@ -815,11 +834,6 @@ class AndroidAdbServer {
         );
       }
       throw error;
-    } finally {
-      // Clean up local temp file
-      if (fs.existsSync(tempLocalPngPath)) {
-        fs.unlinkSync(tempLocalPngPath);
-      }
     }
   }
 
@@ -833,25 +847,26 @@ class AndroidAdbServer {
 
     const deviceId = args?.device_id ? await validateDeviceId(args.device_id) : undefined;
     const format = args?.format && typeof args.format === 'string' ? args.format.toLowerCase() : 'png';
-    const tempDevicePath = '/sdcard/screenshot.png'; // Android always captures as PNG
-    const tempLocalPngPath = path.join(os.tmpdir(), `adb-screenshot-${Date.now()}.png`);
-    const tempLocalConvertedPath = createTempFilePath(format);
+    const tempLocalPath = createTempFilePath(format);
     
     try {
-      // Take screenshot on device
-      await executeAdbCommand(`shell screencap -p ${tempDevicePath}`, deviceId);
+      // Take screenshot using the direct method
+      const deviceFlag = deviceId ? `-s ${deviceId} ` : '';
+      const tempPngPath = tempLocalPath.replace(/\.[^.]+$/, '.png');
       
-      // Pull screenshot to local temp file (as PNG)
-      await executeAdbCommand(`pull ${tempDevicePath} ${tempLocalPngPath}`, deviceId);
+      await execAsync(`adb ${deviceFlag}exec-out screencap -p > "${tempPngPath}"`);
       
-      // Clean up device temp file
-      await executeAdbCommand(`shell rm ${tempDevicePath}`, deviceId);
+      // Convert to desired format if not PNG
+      if (format !== 'png') {
+        await convertImageFormat(tempPngPath, tempLocalPath, format);
+        fs.unlinkSync(tempPngPath);
+      } else {
+        // If PNG, just use the same file
+        fs.renameSync(tempPngPath, tempLocalPath);
+      }
       
-      // Convert image to desired format
-      await convertImageFormat(tempLocalPngPath, tempLocalConvertedPath, format);
-      
-      // Copy to clipboard with specified format
-      await copyImageToClipboard(tempLocalConvertedPath, format);
+      // Copy to clipboard
+      await copyImageToClipboard(tempLocalPath, format);
       
       return {
         content: [
@@ -870,12 +885,9 @@ class AndroidAdbServer {
       }
       throw error;
     } finally {
-      // Clean up local temp files
-      if (fs.existsSync(tempLocalPngPath)) {
-        fs.unlinkSync(tempLocalPngPath);
-      }
-      if (fs.existsSync(tempLocalConvertedPath)) {
-        fs.unlinkSync(tempLocalConvertedPath);
+      // Clean up temp file
+      if (fs.existsSync(tempLocalPath)) {
+        fs.unlinkSync(tempLocalPath);
       }
     }
   }
