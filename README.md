@@ -71,6 +71,15 @@ The server intelligently handles device selection:
 - If multiple devices are connected, you must specify a `device_id` parameter
 - If no devices are connected, an error will be returned
 
+### Screenshot Path Resolution
+
+When specifying the `output_path` for saving screenshots, the path is resolved as follows:
+- Absolute paths are used as-is
+- Paths starting with `~` are expanded to the user's home directory
+- Relative paths are resolved relative to the user's home directory
+
+This ensures that screenshots are saved to a location where the MCP server has write permissions.
+
 ## 🔍 Troubleshooting
 
 ### Common Issues
