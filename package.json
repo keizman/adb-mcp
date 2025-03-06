@@ -1,6 +1,6 @@
 {
   "name": "@landicefu/android-adb-mcp-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "This MCP server provides tools for interacting with Android devices through the Android Debug Bridge (ADB). It enables AI assistants to perform common Android development and testing operations.",
   "main": "build/index.js",
   "type": "module",
@@ -14,6 +14,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "prepare": "npm run build",
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "start": "node build/index.js",
     "dev": "tsc -w",
