@@ -41,3 +41,9 @@ out/
 *.swp
 *.swo
 .DS_Store
+src/android_adb_mcp_server/__pycache__/__init__.cpython-310.pyc
+src/android_adb_mcp_server/__pycache__/main.cpython-310.pyc
+
+/.claude/
+/.cursor/
+uv.lock

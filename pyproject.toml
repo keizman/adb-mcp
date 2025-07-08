@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "android-adb-mcp-server"
+version = "1.0.0"
+description = "A Model Context Protocol (MCP) server that enables AI assistants to interact with Android devices through the Android Debug Bridge (ADB)"
+readme = "README.md"
+license = {text = "ISC"}
+authors = [
+    {name = "Converted to Python", email = "python@example.com"}
+]
+keywords = ["mcp", "android", "adb", "model-context-protocol", "ai-tools", "android-debug-bridge"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: ISC License (ISCL)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+    "pillow>=10.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/landicefu/android-adb-mcp-server"
+Repository = "https://github.com/landicefu/android-adb-mcp-server.git"
+Issues = "https://github.com/landicefu/android-adb-mcp-server/issues"
+
+[project.scripts]
+android-adb-mcp-server = "android_adb_mcp_server.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/android_adb_mcp_server"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/README.md",
+    "/LICENSE",
+]

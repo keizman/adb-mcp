@@ -1,17 +1,41 @@
-# Android ADB MCP Server
+# Android ADB MCP Server (Python)
 
 A Model Context Protocol (MCP) server that enables AI assistants to interact with Android devices through the Android Debug Bridge (ADB). This server bridges the gap between AI capabilities and Android device management, allowing for seamless automation of Android development and testing operations.
 
+**This is a Python implementation converted from the original JavaScript version, using `uv` for dependency management.**
+
 ## ⚙️ Quick Setup
 
-Add the server to your MCP configuration file:
+### Using uv (Recommended)
+
+1. Install the server using uv:
+   ```bash
+   uv add android-adb-mcp-server
+   ```
+
+2. Add the server to your MCP configuration file:
+   ```json
+   {
+     "mcpServers": {
+       "android-adb": {
+         "command": "uv",
+         "args": ["run", "android-adb-mcp-server"],
+         "env": {},
+         "disabled": false,
+         "alwaysAllow": []
+       }
+     }
+   }
+   ```
+
+### Alternative: Direct Python execution
 
 ```json
 {
   "mcpServers": {
     "android-adb": {
-      "command": "npx",
-      "args": ["-y", "@landicefu/android-adb-mcp-server"],
+      "command": "python",
+      "args": ["-m", "android_adb_mcp_server.main"],
       "env": {},
       "disabled": false,
       "alwaysAllow": []
@@ -30,6 +54,8 @@ After configuring, restart your AI assistant to load the new server configuratio
 
 ## 📋 Prerequisites
 
+- **Python 3.10 or higher**
+- **uv** (Python package manager) - [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
 - **ADB (Android Debug Bridge)** must be installed and available in your system PATH
   - [Install ADB on Windows, macOS, or Linux](https://developer.android.com/tools/adb)
   - Verify installation by running `adb version` in your terminal
@@ -37,7 +63,6 @@ After configuring, restart your AI assistant to load the new server configuratio
   - **macOS**: `osascript` (built-in)
   - **Windows**: PowerShell (built-in)
   - **Linux**: `xclip` (install via `apt-get install xclip` or equivalent)
-- Node.js 16.x or higher
 
 ## 🚀 Features
 
@@ -102,14 +127,14 @@ This ensures that screenshots are saved to a location where the MCP server has w
 
 ## 🔧 Alternative Installation Methods
 
-### Option 1: Install from npm
+### Option 1: Install from PyPI (when published)
 
 ```bash
-# Install globally
-npm install -g @landicefu/android-adb-mcp-server
+# Install globally using pip
+pip install android-adb-mcp-server
 
-# Or install locally in your project
-npm install @landicefu/android-adb-mcp-server
+# Or install using uv
+uv add android-adb-mcp-server
 ```
 
 ### Option 2: Manual Installation from Source
@@ -120,19 +145,23 @@ npm install @landicefu/android-adb-mcp-server
    cd android-adb-mcp-server
    ```
 
-2. Install dependencies and build:
+2. Install dependencies using uv:
    ```bash
-   npm install
-   npm run build
+   uv sync
    ```
 
-3. Configure with direct path:
+3. Test the installation:
+   ```bash
+   uv run python test_server.py
+   ```
+
+4. Configure with direct path:
    ```json
    {
      "mcpServers": {
        "android-adb": {
-         "command": "node",
-         "args": ["/path/to/android-adb-mcp-server/build/index.js"],
+         "command": "uv",
+         "args": ["run", "--directory", "/path/to/android-adb-mcp-server", "android-adb-mcp-server"],
          "env": {},
          "disabled": false,
          "alwaysAllow": []
@@ -140,6 +169,18 @@ npm install @landicefu/android-adb-mcp-server
      }
    }
    ```
+
+### Option 3: Development Mode
+
+For development and testing:
+
+```bash
+# Run the server directly
+uv run android-adb-mcp-server
+
+# Or run the test suite
+uv run python test_server.py
+```
 
 ## 📄 License
 
