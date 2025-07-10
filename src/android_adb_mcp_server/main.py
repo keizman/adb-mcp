@@ -380,6 +380,106 @@ class AndroidAdbServer:
                     "required": [],
                 },
             ),
+            Tool(
+                name="clear_app_data",
+                description="Clears all data for a specific application on a connected Android device",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "package_name": {
+                            "type": "string",
+                            "description": "Package name of the application to clear data for",
+                        },
+                        "device_id": {
+                            "type": "string",
+                            "description": "Specific device ID to target",
+                        },
+                    },
+                    "required": ["package_name"],
+                },
+            ),
+            Tool(
+                name="force_stop_app",
+                description="Force stops a running application on a connected Android device",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "package_name": {
+                            "type": "string",
+                            "description": "Package name of the application to force stop",
+                        },
+                        "device_id": {
+                            "type": "string",
+                            "description": "Specific device ID to target",
+                        },
+                    },
+                    "required": ["package_name"],
+                },
+            ),
+            Tool(
+                name="go_to_home",
+                description="Navigates to the home screen on a connected Android device",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "device_id": {
+                            "type": "string",
+                            "description": "Specific device ID to target",
+                        },
+                    },
+                    "required": [],
+                },
+            ),
+            Tool(
+                name="open_settings",
+                description="Opens the Android Settings app on a connected Android device",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "device_id": {
+                            "type": "string",
+                            "description": "Specific device ID to target",
+                        },
+                    },
+                    "required": [],
+                },
+            ),
+            Tool(
+                name="clear_cache_and_restart",
+                description="Clears app data and automatically restarts the application",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "package_name": {
+                            "type": "string",
+                            "description": "Package name of the application to clear and restart",
+                        },
+                        "device_id": {
+                            "type": "string",
+                            "description": "Specific device ID to target",
+                        },
+                    },
+                    "required": ["package_name"],
+                },
+            ),
+            Tool(
+                name="force_restart_app",
+                description="Force stops and then restarts an application on a connected Android device",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "package_name": {
+                            "type": "string",
+                            "description": "Package name of the application to force restart",
+                        },
+                        "device_id": {
+                            "type": "string",
+                            "description": "Specific device ID to target",
+                        },
+                    },
+                    "required": ["package_name"],
+                },
+            ),
         ]
     
     async def call_tool(self, name: str, arguments: Dict[str, Any]) -> List[TextContent]:
@@ -405,6 +505,18 @@ class AndroidAdbServer:
                 return await self.handle_take_screenshot_and_save(arguments)
             elif name == "take_screenshot_and_copy_to_clipboard":
                 return await self.handle_take_screenshot_and_copy_to_clipboard(arguments)
+            elif name == "clear_app_data":
+                return await self.handle_clear_app_data(arguments)
+            elif name == "force_stop_app":
+                return await self.handle_force_stop_app(arguments)
+            elif name == "go_to_home":
+                return await self.handle_go_to_home(arguments)
+            elif name == "open_settings":
+                return await self.handle_open_settings(arguments)
+            elif name == "clear_cache_and_restart":
+                return await self.handle_clear_cache_and_restart(arguments)
+            elif name == "force_restart_app":
+                return await self.handle_force_restart_app(arguments)
             else:
                 raise Exception(f"Unknown tool: {name}")
         except Exception as e:
@@ -648,6 +760,118 @@ class AndroidAdbServer:
             # Clean up temp file
             if os.path.exists(temp_local_path):
                 os.unlink(temp_local_path)
+    
+    async def handle_clear_app_data(self, args: Dict[str, Any]) -> List[TextContent]:
+        """Handle clear_app_data tool call."""
+        if not isinstance(args.get("package_name"), str):
+            raise Exception("Invalid parameters: package_name is required and must be a string")
+        
+        device_id = await validate_device_id(args.get("device_id")) if args.get("device_id") else None
+        output = await execute_adb_command(f"shell pm clear {args['package_name']}", device_id)
+        
+        return [TextContent(type="text", text=f"App data cleared for {args['package_name']}\n{output}")]
+    
+    async def handle_force_stop_app(self, args: Dict[str, Any]) -> List[TextContent]:
+        """Handle force_stop_app tool call."""
+        if not isinstance(args.get("package_name"), str):
+            raise Exception("Invalid parameters: package_name is required and must be a string")
+        
+        device_id = await validate_device_id(args.get("device_id")) if args.get("device_id") else None
+        output = await execute_adb_command(f"shell am force-stop {args['package_name']}", device_id)
+        
+        return [TextContent(type="text", text=f"App force stopped: {args['package_name']}\n{output}")]
+    
+    async def handle_go_to_home(self, args: Dict[str, Any]) -> List[TextContent]:
+        """Handle go_to_home tool call."""
+        device_id = await validate_device_id(args.get("device_id")) if args.get("device_id") else None
+        output = await execute_adb_command("shell input keyevent KEYCODE_HOME", device_id)
+        
+        return [TextContent(type="text", text=f"Navigated to home screen\n{output}")]
+    
+    async def handle_open_settings(self, args: Dict[str, Any]) -> List[TextContent]:
+        """Handle open_settings tool call."""
+        device_id = await validate_device_id(args.get("device_id")) if args.get("device_id") else None
+        output = await execute_adb_command("shell am start -a android.settings.SETTINGS", device_id)
+        
+        return [TextContent(type="text", text=f"Settings app opened\n{output}")]
+    
+    async def handle_clear_cache_and_restart(self, args: Dict[str, Any]) -> List[TextContent]:
+        """Handle clear_cache_and_restart tool call."""
+        if not isinstance(args.get("package_name"), str):
+            raise Exception("Invalid parameters: package_name is required and must be a string")
+        
+        device_id = await validate_device_id(args.get("device_id")) if args.get("device_id") else None
+        package_name = args["package_name"]
+        
+        # Clear app data
+        clear_output = await execute_adb_command(f"shell pm clear {package_name}", device_id)
+        
+        # Wait a bit before starting
+        await asyncio.sleep(1)
+        
+        # Start the app
+        try:
+            start_output = await execute_adb_command(
+                f"shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1",
+                device_id
+            )
+        except Exception:
+            # Fallback method if monkey fails
+            try:
+                package_info = await execute_adb_command(
+                    f'shell dumpsys package {package_name} | grep -A 1 "android.intent.action.MAIN"',
+                    device_id
+                )
+                import re
+                activity_match = re.search(r'([a-zA-Z0-9_.]+/[a-zA-Z0-9_.]+)', package_info)
+                if activity_match:
+                    activity = activity_match.group(1)
+                    start_output = await execute_adb_command(f"shell am start -n {activity}", device_id)
+                else:
+                    start_output = "Could not determine main activity to restart"
+            except Exception as e:
+                start_output = f"Failed to restart app: {str(e)}"
+        
+        return [TextContent(type="text", text=f"App data cleared and restarted: {package_name}\nClear: {clear_output}\nStart: {start_output}")]
+    
+    async def handle_force_restart_app(self, args: Dict[str, Any]) -> List[TextContent]:
+        """Handle force_restart_app tool call."""
+        if not isinstance(args.get("package_name"), str):
+            raise Exception("Invalid parameters: package_name is required and must be a string")
+        
+        device_id = await validate_device_id(args.get("device_id")) if args.get("device_id") else None
+        package_name = args["package_name"]
+        
+        # Force stop the app
+        stop_output = await execute_adb_command(f"shell am force-stop {package_name}", device_id)
+        
+        # Wait a bit before starting
+        await asyncio.sleep(1)
+        
+        # Start the app
+        try:
+            start_output = await execute_adb_command(
+                f"shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1",
+                device_id
+            )
+        except Exception:
+            # Fallback method if monkey fails
+            try:
+                package_info = await execute_adb_command(
+                    f'shell dumpsys package {package_name} | grep -A 1 "android.intent.action.MAIN"',
+                    device_id
+                )
+                import re
+                activity_match = re.search(r'([a-zA-Z0-9_.]+/[a-zA-Z0-9_.]+)', package_info)
+                if activity_match:
+                    activity = activity_match.group(1)
+                    start_output = await execute_adb_command(f"shell am start -n {activity}", device_id)
+                else:
+                    start_output = "Could not determine main activity to restart"
+            except Exception as e:
+                start_output = f"Failed to restart app: {str(e)}"
+        
+        return [TextContent(type="text", text=f"App force restarted: {package_name}\nStop: {stop_output}\nStart: {start_output}")]
     
     async def run(self):
         """Run the server."""

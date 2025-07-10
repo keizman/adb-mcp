@@ -14,12 +14,14 @@ A Model Context Protocol (MCP) server that enables AI assistants to interact wit
    ```
 
 2. Add the server to your MCP configuration file:
+
+   **Method 1: Using Python module (Recommended)**
    ```json
    {
      "mcpServers": {
        "android-adb": {
          "command": "uv",
-         "args": ["run", "android-adb-mcp-server"],
+         "args": ["run", "python", "-m", "android_adb_mcp_server.main"],
          "env": {},
          "disabled": false,
          "alwaysAllow": []
@@ -28,21 +30,35 @@ A Model Context Protocol (MCP) server that enables AI assistants to interact wit
    }
    ```
 
-### Alternative: Direct Python execution
+   **Method 2: Using direct script path**
+   ```json
+   {
+     "mcpServers": {
+       "android-adb": {
+         "command": "uv",
+         "args": ["run", "python", "src/android_adb_mcp_server/main.py"],
+         "env": {},
+         "disabled": false,
+         "alwaysAllow": []
+       }
+     }
+   }
+   ```
 
-```json
-{
-  "mcpServers": {
-    "android-adb": {
-      "command": "python",
-      "args": ["-m", "android_adb_mcp_server.main"],
-      "env": {},
-      "disabled": false,
-      "alwaysAllow": []
-    }
-  }
-}
-```
+   **Method 3: Using wrapper script**
+   ```json
+   {
+     "mcpServers": {
+       "android-adb": {
+         "command": "uv",
+         "args": ["run", "python", "run_server.py"],
+         "env": {},
+         "disabled": false,
+         "alwaysAllow": []
+       }
+     }
+   }
+   ```
 
 ### Configuration Locations
 
@@ -72,6 +88,11 @@ After configuring, restart your AI assistant to load the new server configuratio
 - Push and pull files between local system and Android devices
 - Launch applications on Android devices
 - Take screenshots and save them locally or copy to clipboard
+- **Clear app data and cache for thorough app reset**
+- **Force stop running applications**
+- **Navigate to home screen and settings**
+- **Clear cache and automatically restart apps**
+- **Force restart applications with fallback methods**
 - Smart device selection when multiple devices are connected
 
 ## 🛠️ Available Tools
@@ -88,6 +109,12 @@ After configuring, restart your AI assistant to load the new server configuratio
 | `launch_app` | Launch an application | `package_name` | `device_id` |
 | `take_screenshot_and_save` | Take and save screenshot | `output_path` | `device_id`, `format` |
 | `take_screenshot_and_copy_to_clipboard` | Take screenshot to clipboard | None | `device_id`, `format` |
+| `clear_app_data` | Clear all data for an app | `package_name` | `device_id` |
+| `force_stop_app` | Force stop a running app | `package_name` | `device_id` |
+| `go_to_home` | Navigate to home screen | None | `device_id` |
+| `open_settings` | Open Android Settings app | None | `device_id` |
+| `clear_cache_and_restart` | Clear app data and restart | `package_name` | `device_id` |
+| `force_restart_app` | Force stop and restart app | `package_name` | `device_id` |
 
 ### Device Management
 
@@ -155,13 +182,28 @@ uv add android-adb-mcp-server
    uv run python test_server.py
    ```
 
-4. Configure with direct path:
+4. Configure with absolute path (choose one method):
    ```json
    {
      "mcpServers": {
        "android-adb": {
          "command": "uv",
-         "args": ["run", "--directory", "/path/to/android-adb-mcp-server", "android-adb-mcp-server"],
+         "args": ["run", "--directory", "/path/to/android-adb-mcp-server", "python", "-m", "android_adb_mcp_server.main"],
+         "env": {},
+         "disabled": false,
+         "alwaysAllow": []
+       }
+     }
+   }
+   ```
+
+   Or using the wrapper script:
+   ```json
+   {
+     "mcpServers": {
+       "android-adb": {
+         "command": "python",
+         "args": ["/path/to/android-adb-mcp-server/run_server.py"],
          "env": {},
          "disabled": false,
          "alwaysAllow": []
@@ -175,10 +217,16 @@ uv add android-adb-mcp-server
 For development and testing:
 
 ```bash
-# Run the server directly
-uv run android-adb-mcp-server
+# Method 1: Run using Python module (Recommended)
+uv run python -m android_adb_mcp_server.main
 
-# Or run the test suite
+# Method 2: Run using direct script path
+uv run python src/android_adb_mcp_server/main.py
+
+# Method 3: Run using wrapper script
+uv run python run_server.py
+
+# Run the test suite
 uv run python test_server.py
 ```
 
